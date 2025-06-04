@@ -1,0 +1,14 @@
+/.venv
+/__pycache__
+/creds1.json
+/creds2.json
+/creds3.json
+/files
+/sa-ccont-1b0e1aaaaaf2.json
+/sa-ccont-cf2377926907.json
+/sa-ccont-d70bc1bba3e5.json
+config.py
+horizontal_cut.py
+horizontal_cut2.py
+horizontal
+vertical
