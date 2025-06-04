@@ -44,7 +44,7 @@ def main(images_path):
                 if(not process.check_name_capitalization(person)): continue
                 number_of_scientist+=1
                 update_name(sheet, spreadsheet_id, sheet_id, person)
-            gemini_count_over_gemini_flash = int(fetch.gemini_response(prompt.prompt_asking_total_biographical(), image_path, "gemini-2.5-flash-preview-05-20", 0))
+            gemini_count_over_gemini_flash = int(fetch.gemini_response(prompt.prompt_asking_total_biographical(), image_path, "gemini-2.5-flash-preview-05-20", 0, thinking=True))
             if(number_of_scientist!=gemini_count_over_gemini_flash):
                 print("Something wrong, check with the logs and sheet before continuing.")
                 logger.info("Mismatch ")

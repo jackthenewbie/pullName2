@@ -19,14 +19,17 @@ def openai_response(text, file_path=""):
         }]
     )
     return response.choices[0].message.content
-def gemini_response(text, file_path, model="gemma-3-27b-it", temperature=1):
+def gemini_response(text, file_path, model="gemma-3-27b-it", temperature=1, thinking=False):
     
     client = Client(api_key=gemini_key)
     image = client.files.upload(file=file_path)
+    if(thinking):
+        thinking = types.ThinkingConfig(include_thoughts=True)
+    else: thinking = None
     response = client.models.generate_content(
         model=model, 
         contents=[image, text],
         config=types.GenerateContentConfig(temperature=temperature,
-                                           thinking_config=types.ThinkingConfig(include_thoughts=True))
+                                           thinking_config=None)
         )
     return response.text
