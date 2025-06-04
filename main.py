@@ -51,6 +51,7 @@ def main(images_path):
                 logger.info(f"number_of_scientist record: {number_of_scientist}")
                 logger.info(f"gemini_count_over_gemini_flash: {gemini_count_over_gemini_flash}")
                 break
+            os.remove(image_path)
 main("files")
 
 #count = fetch.gemini_response(prompt.prompt_asking_total_biographical(), "files/page_017.png", "gemini-2.5-flash-preview-05-20")
