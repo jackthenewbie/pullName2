@@ -19,7 +19,7 @@ def openai_response(text, file_path=""):
         }]
     )
     return response.choices[0].message.content
-def gemini_response(text, file_path, model="gemma-3-27b-it", temperature=1, thinking=False):
+def gemini_response(text, file_path, model="gemma-3-27b-it", temperature=0, thinking=False):
     
     client = Client(api_key=gemini_key)
     image = client.files.upload(file=file_path)
