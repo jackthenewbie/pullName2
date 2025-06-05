@@ -3,31 +3,36 @@ You will be provided with text from an image. Your task is to determine if it's 
 
 **Core Identification Rule (ALL conditions MUST be met sequentially):**
 
-A text is a biographical entry **IF AND ONLY IF** it strictly matches the following pattern at the very beginning:
-`LASTNAME_PART, FIRSTNAME_PART [OPTIONAL_MIDDLE_NAME_PART_OR_SUFFIX]`
+A text is a biographical entry **IF AND ONLY IF** it strictly follows the parsing and capitalization rules below.
 
-To verify this, follow these steps:
+**Step 1: Name Field Delimitation (The First Comma Rule)**
 
-1.  **Structural Check: Comma Separator and Parts Existence**
-    *   The text **MUST** contain at least one comma.
-    *   Let `POTENTIAL_LASTNAME` be all text before the *first* comma.
-    *   Let `POTENTIAL_FIRSTNAME_BLOCK` be the text starting *immediately* after the first comma.
-    *   If there is no comma, OR if `POTENTIAL_LASTNAME` is empty, OR if `POTENTIAL_FIRSTNAME_BLOCK` (before any `b.`, `m.`, `c.` markers) is effectively empty of name content (e.g., just punctuation or spaces), it is **NOT** a biographical entry.
+1.  The text **MUST** contain at least one comma. Find the position of the **very first comma**. If no comma exists, it is **NOT** a biographical entry. **Return `{}`.**
+2.  **Isolate Potential Last Name:**
+    *   `POTENTIAL_LASTNAME` is defined as all text from the start of the string up to (but not including) the first comma. Trim any whitespace.
+    *   *Example:* For `STACE-SMITH, RICHARD, b. ...`, `POTENTIAL_LASTNAME` is exactly `STACE-SMITH`.
+3.  **Isolate Potential First Name:**
+    *   Let `REMAINDER_TEXT` be all text immediately *after* the first comma.
+    *   *Example:* For `STACE-SMITH, RICHARD, b. ...`, `REMAINDER_TEXT` is ` RICHARD, b. ...`.
+    *   Within `REMAINDER_TEXT`, find the start of the first biographical marker (e.g., `b.`, `m.`, `c.`) or a semicolon.
+    *   `POTENTIAL_FIRSTNAME` is the text from the beginning of `REMAINDER_TEXT` up to that marker/semicolon.
+    *   Finally, trim any leading/trailing whitespace and any trailing commas from `POTENTIAL_FIRSTNAME`.
+    *   *Example:* The text in `REMAINDER_TEXT` before `b.` is ` RICHARD,`. After trimming, `POTENTIAL_FIRSTNAME` is `RICHARD`.
+4.  **Validation:** If, after this process, `POTENTIAL_LASTNAME` or `POTENTIAL_FIRSTNAME` is empty, it is **NOT** a biographical entry. **Return `{}`.**
 
-2.  **Last Name Capitalization Check:**
-    *   To evaluate `POTENTIAL_LASTNAME`:
-        a.  For each character in `POTENTIAL_LASTNAME`:
-            i.  If the character is an alphabetic letter (A-Z), it **MUST** be UPPERCASE. If it is a lowercase letter, `POTENTIAL_LASTNAME` fails this check.
-            ii. If the character is non-alphabetic, it **MUST** be one of the following permitted characters: a hyphen (`-`), an apostrophe (`'`), a space (` `), or a parenthesis (`(` or `)`). If it is any other non-alphabetic character, `POTENTIAL_LASTNAME` fails this check. (Spaces are generally permissible if they separate uppercase name components, e.g., `VAN DER WAALS` or within parentheses like `DOE (SMITH)`).
-        b.  If `POTENTIAL_LASTNAME` fails any condition in step 2.a, it is **NOT** a biographical entry. **Return `{}` immediately.**
+**Step 2: Last Name Capitalization Check**
 
-3.  **First Name (+ Middle Info/Suffixes) Capitalization Check:**
-    *   Consider the name segment within `POTENTIAL_FIRSTNAME_BLOCK`. This segment comprises the first name, any middle names or initials (e.g., `J.`, `R.`), and any common suffixes (e.g., `JR.`, `SR.`, `III`), extending up to (but not including) any biographical markers like `b. YY;`, `m. YY;`, or `c. N;`.
-    *   To evaluate this name segment:
-        a.  For each character in this name segment:
-            i.  If the character is an alphabetic letter (A-Z), it **MUST** be UPPERCASE. If it is a lowercase letter, this name segment fails this check.
-            ii. If the character is non-alphabetic, it **MUST** be one of the following permitted characters: a period (`.`) (common in initials/suffixes), a hyphen (`-`), an apostrophe (`'`), a space (` `), or a parenthesis (`(` or `)`). If it is any other non-alphabetic character, this name segment fails this check.
-        b.  If this name segment fails any condition in step 3.a, it is **NOT** a biographical entry. **Return `{}` immediately.**
+1.  For each character in the `POTENTIAL_LASTNAME` identified in Step 1:
+    *   If the character is a letter, it **MUST** be UPPERCASE.
+    *   If it is not a letter, it **MUST** be a hyphen (`-`), apostrophe (`'`), space (` `), or parenthesis (`(` or `)`).
+2.  If this rule is violated, it is **NOT** a biographical entry. **Return `{}` immediately.**
+
+**Step 3: First Name (+ Suffix) Capitalization Check**
+
+1.  For each character in the `POTENTIAL_FIRSTNAME` identified in Step 1:
+    *   If the character is a letter, it **MUST** be UPPERCASE.
+    *   If it is not a letter, it **MUST** be a period (`.`), hyphen (`-`), apostrophe (`'`), space (` `), or parenthesis (`(` or `)`).
+2.  If this rule is violated, it is **NOT** a biographical entry. **Return `{}` immediately.**
 
 **IF the text does NOT meet ALL of the above conditions, it is NOT a biographical entry. Return `{}`.**
 
@@ -50,15 +55,15 @@ Examples of **VALID** starts:
 
 **Information to Extract (ONLY IF the Core Identification Rule is fully met):**
 
-*   `"lastname"`: The `POTENTIAL_LASTNAME`.
-*   `"firstname"`: The identified name segment from `POTENTIAL_FIRSTNAME_BLOCK` (from step 3).
-    *   **Parentheses/Brackets Handling:** If parts of this first name or middle name segment were originally enclosed in parentheses or brackets (e.g., "J(OHN) D(OE)"), remove the parentheses/brackets themselves but retain the letters within them, integrating them into the name (e.g., becomes "JOHN DOE"). Maintain the verified uppercase state of these letters. For lastnames with parentheses like `STACK (ALTERNATIVE)`, the `lastname` field should include the content within parentheses as it was in `POTENTIAL_LASTNAME`, e.g., "STACK (ALTERNATIVE)".
+*   `"lastname"`: The `POTENTIAL_LASTNAME` from Step 1.
+*   `"firstname"`: The `POTENTIAL_FIRSTNAME` from Step 1.
+    *   **Parentheses/Brackets Handling:** If parts of the name were originally enclosed in parentheses (e.g., "B(OGDAN)"), remove the parentheses themselves but retain the uppercase letters within them (e.g., becomes "BOGDAN"). For lastnames with parentheses like `STACK (ALTERNATIVE)`, the `lastname` field should include the content within parentheses as it was in `POTENTIAL_LASTNAME`, e.g., "STACK (ALTERNATIVE)".
 *   `"b"`: The two-digit year from a `b. ... YY;` entry if present (e.g., `38` from `b. ... 38;`). If `b. YY;` is missing, use `null`.
 *   `"m"`: The two-digit year from an `m. ... YY;` entry if present (e.g., `61` from `m. ... 61;`). If `m. YY;` is missing, use `null`.
 *   `"c"`: The number from a `c. N;` entry if present (e.g., `3` from `c. 3;`). If `c. N;` is missing, use `null`.
 
 **Content to IGNORE (these are contexts where you'd return `{}` because the Core Identification Rule would fail):**
-*   Any text not strictly matching the `LASTNAME_PART, FIRSTNAME_PART...` format with specified capitalization at the beginning.
+*   Any text not strictly matching the parsing and capitalization format at the beginning.
 *   Headers/Footers/Page Numbers (e.g., "4738 / PAFFENBARGER", "SMITH / 123").
 *   Title Pages (e.g., "AMERICAN MEN AND WOMEN OF SCIENCE").
 *   Copyright/Publisher Information, Prefaces, Tables of Content, Indexes.
@@ -67,42 +72,59 @@ Output MUST be ONLY the JSON object. Ensure string values are trimmed.
 """
 
 prompt2="""
-You will be provided with an image. Your task is to analyze the text content within this image.
-Determine if the text in the image represents a standard biographical entry, as opposed to other text elements like headers or index lines.
+You will be provided with text from an image. Your task is to determine if it's a standard biographical entry and extract information if it is.
 
-**Key Features of a Biographical Entry (ALL these primary features should be present for a positive ID):**
-1.  The entry **must** begin with a person's name (they must be all in capitalized, if not return {} now) in the format: `LASTNAME, FIRSTNAME [MIDDLE_INFO]`. All parts of the name are capitalized. A lone lastname, or a lastname preceded only by a number/symbol, is NOT a biographical entry.
-2.  This full name structure **must** be followed very closely (often immediately) by `b.` (indicating "born"), then details including a two-digit birth year (e.g., `b. City, State, Mon. DD, YY;`).
-3.  The combination of `LASTNAME, FIRSTNAME ... b. ... YY;` is the definitive sequence. Without the `b.` details immediately following a full name, it is NOT a biographical entry.
+**Core Identification Rule (ALL conditions MUST be met sequentially):**
 
-**Secondary Features (often present but not definitive without the primary ones):**
-*   May also contain `m. YY;` (married year) and `c. N;` (number of children) after the birth information.
-*   The entry is usually a dense block of text with many abbreviations and uses semicolons to separate distinct pieces of information (degrees, jobs).
+A text is a biographical entry **IF AND ONLY IF** it strictly follows the parsing and capitalization rules below.
 
-**Content to IGNORE (if the image's text primarily shows these, or if primary biographical features are missing, return {}):**
-*   **Headers/Footers/Page Numbers:** Text that is clearly a page identifier, often a number followed by a single name or word (e.g., "4738 / PAFFENBARGER", "SMITH / 123"). These lack the `FIRSTNAME` and the crucial `b. ... YY;` details.
-*   **Title Pages:** Large, centered text (e.g., "AMERICAN MEN AND WOMEN OF SCIENCE").
-*   **Copyright/Publisher Information:** Text like "Copyright ©", "Published by", "ISBN:".
-*   **Lists of Personnel/Contributors not following the full biographical pattern:** e.g., "Dr. Mina Rees, President...", "Chairman: Dr. John G. Truxal...". These lack the specific `LASTNAME, FIRSTNAME ... b. ... YY;` sequence.
-*   **Other non-biographical content:** Prefaces, tables of content, indexes.
-*   **Any text block that does not start with `LASTNAME, FIRSTNAME` followed by `b. ... YY;`**.
-*   **Any text block that doesn't have LASTNAME, FIRSTNAME  capitalized (both must be capitalized, all letter in name)
-*
-**Your Instructions:**
+**Step 1: Name Field Delimitation (The First Comma Rule)**
 
-Analyze the text derived from the input image:
+1.  The text **MUST** contain at least one comma. Find the position of the **very first comma**. If no comma exists, it is **NOT** a biographical entry. **Return `{}`.**
+2.  **Isolate Potential Last Name:**
+    *   `POTENTIAL_LASTNAME` is defined as all text from the start of the string up to (but not including) the first comma. Trim any whitespace.
+    *   *Example 1:* For `STACE-SMITH, RICHARD...`, `POTENTIAL_LASTNAME` is `STACE-SMITH`.
+    *   *Example 2:* For `STACK (STACHIEWICZ), B(OGDAN)...`, `POTENTIAL_LASTNAME` is `STACK (STACHIEWICZ)`.
+3.  **Isolate Potential First Name:**
+    *   Let `REMAINDER_TEXT` be all text immediately *after* the first comma.
+    *   Within `REMAINDER_TEXT`, find the start of the first biographical marker (e.g., `b.`, `m.`, `c.`) or a semicolon.
+    *   `POTENTIAL_FIRSTNAME` is the text from the beginning of `REMAINDER_TEXT` up to that marker/semicolon.
+    *   Finally, trim any leading/trailing whitespace and any trailing commas from `POTENTIAL_FIRSTNAME`.
+    *   *Example:* For `...B(OGDAN) R(OMAN), b. Lwow...`, the text before `b.` is ` B(OGDAN) R(OMAN),`. After trimming, `POTENTIAL_FIRSTNAME` is `B(OGDAN) R(OMAN)`.
+4.  **Validation:** If, after this process, `POTENTIAL_LASTNAME` or `POTENTIAL_FIRSTNAME` is empty, it is **NOT** a biographical entry. **Return `{}`.**
 
-IF the text from the image does NOT meet ALL the primary "Key Features of a Biographical Entry" described above (especially the `LASTNAME, FIRSTNAME ... b. ... YY;` sequence):
-    Return an empty JSON object:
-    `{}`
+**Step 2: Last Name Capitalization Check**
 
-ELSE (if the text from the image IS clearly identified as a biographical entry by meeting all primary features):
-    Extract the following information from the biographical entry text into a JSON object:
-    *   `"lastname"`: The person's last name, as it appears (typically all uppercase).
-    *   `"firstname"`: The person's first name(s) and any middle name or initial, as it appears (typically all uppercase). **Crucially, if parts of the first or middle name are enclosed in parentheses or brackets, remove the parentheses/brackets themselves but retain the letters within them, integrating them into the name.** For example, if the name appears as "J(OHN) D(OE)", it MUST be extracted as "JOHN DOE". Maintain capitalization.
-    *   `"b"`: The two-digit year from the `b.` entry (e.g., `38` from `b. ... 38;`). If missing, use `null` (null for json, not a string).
-    *   `"m"`: The two-digit year from the `m.` entry (e.g., `61` from `m. 61;`). If missing, use `null` (null for json, not a string).
-    *   `"c"`: The number from the `c.` entry (e.g., `3` from `c. 3.`). If missing, use `null` (null for json, not a string).
+1.  For each character in the `POTENTIAL_LASTNAME` identified in Step 1:
+    *   If the character is a letter, it **MUST** be UPPERCASE.
+    *   If it is not a letter, it **MUST** be a hyphen (`-`), apostrophe (`'`), space (` `), or parenthesis (`(` or `)`).
+2.  If this rule is violated, it is **NOT** a biographical entry. **Return `{}` immediately.**
+
+**Step 3: First Name (+ Suffix) Capitalization Check**
+
+1.  For each character in the `POTENTIAL_FIRSTNAME` identified in Step 1:
+    *   If the character is a letter, it **MUST** be UPPERCASE.
+    *   If it is not a letter, it **MUST** be a period (`.`), hyphen (`-`), apostrophe (`'`), space (` `), or parenthesis (`(` or `)`).
+    *   *Note:* Complex patterns like `B(OGDAN) R(OMAN)` are valid if they meet these character rules.
+2.  If this rule is violated, it is **NOT** a biographical entry. **Return `{}` immediately.**
+
+**IF the text does NOT meet ALL of the above conditions, it is NOT a biographical entry. Return `{}`.**
+
+**Information to Extract (ONLY IF the Core Identification Rule is fully met):**
+
+*   `"lastname"`: The `POTENTIAL_LASTNAME` from Step 1.
+*   `"firstname"`: The `POTENTIAL_FIRSTNAME` from Step 1, with the following transformation applied: remove all parentheses but keep the letters that were inside them.
+    *   *Example 1:* `B(OGDAN)` becomes `BOGDAN`.
+    *   *Example 2:* `B(OGDAN) R(OMAN)` becomes `BOGDAN ROMAN`.
+*   `"b"`: The two-digit year from a `b. ... YY;` entry if present (e.g., `24` from `b. ... 24;`). If `b. YY;` is missing, use `null`.
+*   `"m"`: The two-digit year from an `m. ... YY;` entry if present (e.g., `55` from `m. ... 55;`). If `m. YY;` is missing, use `null`.
+*   `"c"`: The number from a `c. N;` entry if present (e.g., `4` from `c. 4;`). If `c. N;` is missing, use `null`.
+
+**Content to IGNORE (these are contexts where you'd return `{}` because the Core Identification Rule would fail):**
+*   Any text not strictly matching the parsing and capitalization format at the beginning.
+*   Headers/Footers/Page Numbers (e.g., "4738 / PAFFENBARGER", "SMITH / 123").
+*   Title Pages (e.g., "AMERICAN MEN AND WOMEN OF SCIENCE").
+*   Copyright/Publisher Information, Prefaces, Tables of Content, Indexes.
 
 Output MUST be ONLY the JSON object. Ensure string values are trimmed.
 """

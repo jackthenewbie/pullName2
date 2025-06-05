@@ -41,6 +41,7 @@ def main(images_path):
                 logger.info(paragraph_png)
                 person = process.ai_response_to_list(prompt.prompt(), paragraph)
                 time.sleep(3)
+                logger.info(person)
                 if(len(person)==0): continue
                 if(not process.check_name_capitalization(person)): continue
                 number_of_scientist+=1
