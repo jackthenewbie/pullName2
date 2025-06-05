@@ -45,13 +45,13 @@ def main(images_path):
                 number_of_scientist+=1
                 update_name(sheet, spreadsheet_id, sheet_id, person)
             gemini_count_over_gemini_flash = int(fetch.gemini_response(prompt.prompt_asking_total_biographical(), image_path, "gemini-2.5-flash-preview-05-20", 0, thinking=True))
+            os.remove(image_path)
             if(number_of_scientist!=gemini_count_over_gemini_flash):
                 print("Something wrong, check with the logs and sheet before continuing.")
                 logger.info("Mismatch ")
                 logger.info(f"number_of_scientist record: {number_of_scientist}")
                 logger.info(f"gemini_count_over_gemini_flash: {gemini_count_over_gemini_flash}")
                 break
-            os.remove(image_path)
 main("files")
 
 #count = fetch.gemini_response(prompt.prompt_asking_total_biographical(), "files/page_017.png", "gemini-2.5-flash-preview-05-20")
