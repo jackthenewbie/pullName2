@@ -26,8 +26,9 @@ def generate_paragraph_cut(image_path):
 from logger import logger
 import datetime
 def main(images_path):
-    
-    for f in os.listdir(images_path):
+    images = os.listdir(images_path)
+    images.sort()
+    for f in images:
         is_image = str(f).endswith(".png")
         if is_image:
             image_path = os.path.join(images_path, f)
@@ -38,7 +39,7 @@ def main(images_path):
                 paragraph = os.path.join("horizontal", paragraph_png)
                 logger.info("------------------------------------------------")
                 logger.info(paragraph_png)
-                person = process.ai_response_to_list(prompt.prompt2_5, paragraph)
+                person = process.ai_response_to_list(prompt.prompt4, paragraph)
                 time.sleep(3)
                 if(len(person)==0): continue
                 if(not process.check_name_capitalization(person)): continue
