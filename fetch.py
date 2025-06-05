@@ -32,4 +32,5 @@ def gemini_response(text, file_path, model="gemini-2.0-flash", temperature=0, th
         config=types.GenerateContentConfig(temperature=temperature,
                                            thinking_config=None)
         )
+    client.files.delete(name=image.name)
     return response.text

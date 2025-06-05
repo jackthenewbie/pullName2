@@ -1,39 +1,67 @@
 prompt_origin="""
-You will be provided with an image. Your task is to analyze the text content within this image.
-Determine if the text in the image represents a standard biographical entry, as opposed to other text elements like headers or index lines.
+You will be provided with text from an image. Your task is to determine if it's a standard biographical entry and extract information if it is.
 
-**Key Features of a Biographical Entry (ALL these primary features should be present for a positive ID):**
-1.  The entry **must** begin with a person's name in the format: `LASTNAME, FIRSTNAME [MIDDLE_INFO]`. All parts of the name are typically capitalized. A lone lastname, or a lastname preceded only by a number/symbol, is NOT a biographical entry.
-2.  This full name structure **must** be followed very closely (often immediately) by `b.` (indicating "born"), then details including a two-digit birth year (e.g., `b. City, State, Mon. DD, YY;`).
-3.  The combination of `LASTNAME, FIRSTNAME ... b. ... YY;` is the definitive sequence. Without the `b.` details immediately following a full name, it is NOT a biographical entry.
+**Core Identification Rule (ALL conditions MUST be met sequentially):**
 
-**Secondary Features (often present but not definitive without the primary ones):**
-*   May also contain `m. YY;` (married year) and `c. N;` (number of children) after the birth information.
-*   The entry is usually a dense block of text with many abbreviations and uses semicolons to separate distinct pieces of information (degrees, jobs).
+A text is a biographical entry **IF AND ONLY IF** it strictly matches the following pattern at the very beginning:
+`LASTNAME_PART, FIRSTNAME_PART [OPTIONAL_MIDDLE_NAME_PART_OR_SUFFIX]`
 
-**Content to IGNORE (if the image's text primarily shows these, or if primary biographical features are missing, return {}):**
-*   **Headers/Footers/Page Numbers:** Text that is clearly a page identifier, often a number followed by a single name or word (e.g., "4738 / PAFFENBARGER", "SMITH / 123"). These lack the `FIRSTNAME` and the crucial `b. ... YY;` details.
-*   **Title Pages:** Large, centered text (e.g., "AMERICAN MEN AND WOMEN OF SCIENCE").
-*   **Copyright/Publisher Information:** Text like "Copyright ©", "Published by", "ISBN:".
-*   **Lists of Personnel/Contributors not following the full biographical pattern:** e.g., "Dr. Mina Rees, President...", "Chairman: Dr. John G. Truxal...". These lack the specific `LASTNAME, FIRSTNAME ... b. ... YY;` sequence.
-*   **Other non-biographical content:** Prefaces, tables of content, indexes.
-*   **Any text block that does not start with `LASTNAME, FIRSTNAME` followed by `b. ... YY;`**.
+To verify this, follow these steps:
 
-**Your Instructions:**
+1.  **Structural Check: Comma Separator and Parts Existence**
+    *   The text **MUST** contain at least one comma.
+    *   Let `POTENTIAL_LASTNAME` be all text before the *first* comma.
+    *   Let `POTENTIAL_FIRSTNAME_BLOCK` be the text starting *immediately* after the first comma.
+    *   If there is no comma, OR if `POTENTIAL_LASTNAME` is empty, OR if `POTENTIAL_FIRSTNAME_BLOCK` (before any `b.`, `m.`, `c.` markers) is effectively empty of name content (e.g., just punctuation or spaces), it is **NOT** a biographical entry.
 
-Analyze the text derived from the input image:
+2.  **Last Name Capitalization Check:**
+    *   To evaluate `POTENTIAL_LASTNAME`:
+        a.  For each character in `POTENTIAL_LASTNAME`:
+            i.  If the character is an alphabetic letter (A-Z), it **MUST** be UPPERCASE. If it is a lowercase letter, `POTENTIAL_LASTNAME` fails this check.
+            ii. If the character is non-alphabetic, it **MUST** be one of the following permitted characters: a hyphen (`-`), an apostrophe (`'`), a space (` `), or a parenthesis (`(` or `)`). If it is any other non-alphabetic character, `POTENTIAL_LASTNAME` fails this check. (Spaces are generally permissible if they separate uppercase name components, e.g., `VAN DER WAALS` or within parentheses like `DOE (SMITH)`).
+        b.  If `POTENTIAL_LASTNAME` fails any condition in step 2.a, it is **NOT** a biographical entry. **Return `{}` immediately.**
 
-IF the text from the image does NOT meet ALL the primary "Key Features of a Biographical Entry" described above (especially the `LASTNAME, FIRSTNAME ... b. ... YY;` sequence):
-    Return an empty JSON object:
-    `{}`
+3.  **First Name (+ Middle Info/Suffixes) Capitalization Check:**
+    *   Consider the name segment within `POTENTIAL_FIRSTNAME_BLOCK`. This segment comprises the first name, any middle names or initials (e.g., `J.`, `R.`), and any common suffixes (e.g., `JR.`, `SR.`, `III`), extending up to (but not including) any biographical markers like `b. YY;`, `m. YY;`, or `c. N;`.
+    *   To evaluate this name segment:
+        a.  For each character in this name segment:
+            i.  If the character is an alphabetic letter (A-Z), it **MUST** be UPPERCASE. If it is a lowercase letter, this name segment fails this check.
+            ii. If the character is non-alphabetic, it **MUST** be one of the following permitted characters: a period (`.`) (common in initials/suffixes), a hyphen (`-`), an apostrophe (`'`), a space (` `), or a parenthesis (`(` or `)`). If it is any other non-alphabetic character, this name segment fails this check.
+        b.  If this name segment fails any condition in step 3.a, it is **NOT** a biographical entry. **Return `{}` immediately.**
 
-ELSE (if the text from the image IS clearly identified as a biographical entry by meeting all primary features):
-    Extract the following information from the biographical entry text into a JSON object:
-    *   `"lastname"`: The person's last name, as it appears (must be all uppercase).
-    *   `"firstname"`: The person's first name(s) and any middle name or initial, as it appears (must be all uppercase).
-    *   `"b"`: The two-digit year from the `b.` entry (e.g., `38` from `b. ... 38;`). If missing, use `null`.
-    *   `"m"`: The two-digit year from the `m.` entry (e.g., `61` from `m. 61;`). If missing, use `null`.
-    *   `"c"`: The number from the `c.` entry (e.g., `3` from `c. 3.`). If missing, use `null`.
+**IF the text does NOT meet ALL of the above conditions, it is NOT a biographical entry. Return `{}`.**
+
+Examples of **INVALID** starts (these will fail the Core Identification Rule and you MUST return `{}`):
+*   `Can.`
+*   `Smith, John David`
+*   `SMITH, John`
+*   `PFEIFFER`
+*   `Pfeiffer vis. prof...`
+*   `UPPERCASE,`
+
+Examples of **VALID** starts:
+*   `SMITH, JOHN DAVID`
+*   `DOE, JANE R.`
+*   `O'NEIL, PATRICK`
+*   `LEE, CHUN-HEE`
+*   `STACK-STAIKIDIS, WILLIAM JOHN`
+*   `STACK (ALTERNATIVE), B(OGDAN) R., JR.`
+*   `VAN DER POST, LAURENS` (Example with spaces in lastname)
+
+**Information to Extract (ONLY IF the Core Identification Rule is fully met):**
+
+*   `"lastname"`: The `POTENTIAL_LASTNAME`.
+*   `"firstname"`: The identified name segment from `POTENTIAL_FIRSTNAME_BLOCK` (from step 3).
+    *   **Parentheses/Brackets Handling:** If parts of this first name or middle name segment were originally enclosed in parentheses or brackets (e.g., "J(OHN) D(OE)"), remove the parentheses/brackets themselves but retain the letters within them, integrating them into the name (e.g., becomes "JOHN DOE"). Maintain the verified uppercase state of these letters. For lastnames with parentheses like `STACK (ALTERNATIVE)`, the `lastname` field should include the content within parentheses as it was in `POTENTIAL_LASTNAME`, e.g., "STACK (ALTERNATIVE)".
+*   `"b"`: The two-digit year from a `b. ... YY;` entry if present (e.g., `38` from `b. ... 38;`). If `b. YY;` is missing, use `null`.
+*   `"m"`: The two-digit year from an `m. ... YY;` entry if present (e.g., `61` from `m. ... 61;`). If `m. YY;` is missing, use `null`.
+*   `"c"`: The number from a `c. N;` entry if present (e.g., `3` from `c. 3;`). If `c. N;` is missing, use `null`.
+
+**Content to IGNORE (these are contexts where you'd return `{}` because the Core Identification Rule would fail):**
+*   Any text not strictly matching the `LASTNAME_PART, FIRSTNAME_PART...` format with specified capitalization at the beginning.
+*   Headers/Footers/Page Numbers (e.g., "4738 / PAFFENBARGER", "SMITH / 123").
+*   Title Pages (e.g., "AMERICAN MEN AND WOMEN OF SCIENCE").
+*   Copyright/Publisher Information, Prefaces, Tables of Content, Indexes.
 
 Output MUST be ONLY the JSON object. Ensure string values are trimmed.
 """
@@ -137,11 +165,22 @@ Count the number of biographical entries. An entry is identified by a bolded or 
 
 Provide only the integer count. Do not include any text, punctuation, or spaces beyond the digit itself.
 """
-def prompt(text, think):
-    result_prompt = prompt4
+prompt5="""
+Count biographical entries.
+To be counted, an entry MUST start with:
+1. A lastname part before the first comma. All ALPHABETIC characters in this lastname part MUST be UPPERCASE.
+2. A firstname part (which can include middle names/initials) immediately after the first comma. All ALPHABETIC characters in this firstname part, including any letters found inside parentheses, MUST be UPPERCASE.
+
+Both the lastname and firstname parts must be non-empty and contain actual name characters (not just punctuation).
+Ignore any text that is clearly a header or footer.
+
+Your entire response MUST be a single integer representing the total count. Do not include any other words, explanations, lists, or reasoning. Output only the number itself.
+"""
+def prompt():
+    result_prompt = prompt_origin
     #if(think):
     #    result_prompt = prompt_origin.replace("/no_think", "")
     return result_prompt
 
 def prompt_asking_total_biographical():
-    return prompt3
+    return prompt5

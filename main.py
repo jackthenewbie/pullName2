@@ -39,20 +39,21 @@ def main(images_path):
                 paragraph = os.path.join("horizontal", paragraph_png)
                 logger.info("------------------------------------------------")
                 logger.info(paragraph_png)
-                person = process.ai_response_to_list(prompt.prompt4, paragraph)
+                person = process.ai_response_to_list(prompt.prompt(), paragraph)
                 time.sleep(3)
                 if(len(person)==0): continue
                 if(not process.check_name_capitalization(person)): continue
                 number_of_scientist+=1
                 update_name(sheet, spreadsheet_id, sheet_id, person)
-            gemini_count_over_gemini_flash = int(fetch.gemini_response(prompt.prompt_asking_total_biographical(), image_path, "gemini-2.5-flash-preview-05-20", 0, thinking=True))
-            os.remove(image_path)
+            guessing_total_paragraph = fetch.gemini_response(prompt.prompt_asking_total_biographical(), image_path, "gemini-2.5-flash-preview-05-20", 0, thinking=True)
+            gemini_count_over_gemini_flash = int(guessing_total_paragraph)
             if(number_of_scientist!=gemini_count_over_gemini_flash):
                 print("Something wrong, check with the logs and sheet before continuing.")
                 logger.info("Mismatch ")
                 logger.info(f"number_of_scientist record: {number_of_scientist}")
                 logger.info(f"gemini_count_over_gemini_flash: {gemini_count_over_gemini_flash}")
                 break
+            os.remove(image_path)
 main("files")
 
 #count = fetch.gemini_response(prompt.prompt_asking_total_biographical(), "files/page_017.png", "gemini-2.5-flash-preview-05-20")
