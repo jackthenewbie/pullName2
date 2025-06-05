@@ -80,51 +80,32 @@ A text is a biographical entry **IF AND ONLY IF** it strictly follows the parsin
 
 **Step 1: Name Field Delimitation (The First Comma Rule)**
 
-1.  The text **MUST** contain at least one comma. Find the position of the **very first comma**. If no comma exists, it is **NOT** a biographical entry. **Return `{}`.**
+1.  The text **MUST** contain at least one comma. Find the position of the **very first comma**. This comma is the ONLY valid separator between the last name and the first name block. If no comma exists, it is **NOT** a biographical entry. **Return `{}`.**
 2.  **Isolate Potential Last Name:**
-    *   `POTENTIAL_LASTNAME` is defined as all text from the start of the string up to (but not including) the first comma. Trim any whitespace.
-    *   *Example 1:* For `STACE-SMITH, RICHARD...`, `POTENTIAL_LASTNAME` is `STACE-SMITH`.
-    *   *Example 2:* For `STACK (STACHIEWICZ), B(OGDAN)...`, `POTENTIAL_LASTNAME` is `STACK (STACHIEWICZ)`.
+    *   `POTENTIAL_LASTNAME` is defined as all text from the start of the string up to (but not including) the **very first comma**.
+    *   **CRITICAL VALIDATION:** The resulting `POTENTIAL_LASTNAME` string **MUST NOT** contain any commas itself. If it does, the entry is malformed. **Return `{}` immediately.**
 3.  **Isolate Potential First Name:**
-    *   Let `REMAINDER_TEXT` be all text immediately *after* the first comma.
-    *   Within `REMAINDER_TEXT`, find the start of the first biographical marker (e.g., `b.`, `m.`, `c.`) or a semicolon.
+    *   Let `REMAINDER_TEXT` be all text immediately *after* the **very first comma**.
+    *   Within `REMAINDER_TEXT`, find the start of the first biographical marker (e.g., `b.`, `m.`, `c.`) or a semicolon that marks the end of the name.
     *   `POTENTIAL_FIRSTNAME` is the text from the beginning of `REMAINDER_TEXT` up to that marker/semicolon.
     *   Finally, trim any leading/trailing whitespace and any trailing commas from `POTENTIAL_FIRSTNAME`.
-    *   *Example:* For `...B(OGDAN) R(OMAN), b. Lwow...`, the text before `b.` is ` B(OGDAN) R(OMAN),`. After trimming, `POTENTIAL_FIRSTNAME` is `B(OGDAN) R(OMAN)`.
 4.  **Validation:** If, after this process, `POTENTIAL_LASTNAME` or `POTENTIAL_FIRSTNAME` is empty, it is **NOT** a biographical entry. **Return `{}`.**
 
-**Step 2: Last Name Capitalization Check**
+**Step 2: Capitalization Checks**
 
-1.  For each character in the `POTENTIAL_LASTNAME` identified in Step 1:
-    *   If the character is a letter, it **MUST** be UPPERCASE.
-    *   If it is not a letter, it **MUST** be a hyphen (`-`), apostrophe (`'`), space (` `), or parenthesis (`(` or `)`).
-2.  If this rule is violated, it is **NOT** a biographical entry. **Return `{}` immediately.**
-
-**Step 3: First Name (+ Suffix) Capitalization Check**
-
-1.  For each character in the `POTENTIAL_FIRSTNAME` identified in Step 1:
-    *   If the character is a letter, it **MUST** be UPPERCASE.
-    *   If it is not a letter, it **MUST** be a period (`.`), hyphen (`-`), apostrophe (`'`), space (` `), or parenthesis (`(` or `)`).
-    *   *Note:* Complex patterns like `B(OGDAN) R(OMAN)` are valid if they meet these character rules.
-2.  If this rule is violated, it is **NOT** a biographical entry. **Return `{}` immediately.**
+1.  **Last Name:** For each character in `POTENTIAL_LASTNAME`: if it's a letter, it **MUST** be UPPERCASE. If not a letter, it must be a hyphen (`-`), apostrophe (`'`), space (` `), or parenthesis (`(` or `)`).
+2.  **First Name:** For each character in `POTENTIAL_FIRSTNAME`: if it's a letter, it **MUST** be UPPERCASE. If not a letter, it must be a period (`.`), hyphen (`-`), apostrophe (`'`), space (` `), or parenthesis (`(` or `)`).
+3.  If any capitalization rule is violated, **Return `{}`.**
 
 **IF the text does NOT meet ALL of the above conditions, it is NOT a biographical entry. Return `{}`.**
 
 **Information to Extract (ONLY IF the Core Identification Rule is fully met):**
 
 *   `"lastname"`: The `POTENTIAL_LASTNAME` from Step 1.
-*   `"firstname"`: The `POTENTIAL_FIRSTNAME` from Step 1, with the following transformation applied: remove all parentheses but keep the letters that were inside them.
-    *   *Example 1:* `B(OGDAN)` becomes `BOGDAN`.
-    *   *Example 2:* `B(OGDAN) R(OMAN)` becomes `BOGDAN ROMAN`.
-*   `"b"`: The two-digit year from a `b. ... YY;` entry if present (e.g., `24` from `b. ... 24;`). If `b. YY;` is missing, use `null`.
-*   `"m"`: The two-digit year from an `m. ... YY;` entry if present (e.g., `55` from `m. ... 55;`). If `m. YY;` is missing, use `null`.
-*   `"c"`: The number from a `c. N;` entry if present (e.g., `4` from `c. 4;`). If `c. N;` is missing, use `null`.
-
-**Content to IGNORE (these are contexts where you'd return `{}` because the Core Identification Rule would fail):**
-*   Any text not strictly matching the parsing and capitalization format at the beginning.
-*   Headers/Footers/Page Numbers (e.g., "4738 / PAFFENBARGER", "SMITH / 123").
-*   Title Pages (e.g., "AMERICAN MEN AND WOMEN OF SCIENCE").
-*   Copyright/Publisher Information, Prefaces, Tables of Content, Indexes.
+*   `"firstname"`: The `POTENTIAL_FIRSTNAME` from Step 1, exactly as it was identified. **Do not remove or alter the parentheses.** For example, `H(ANS) H(EINRICH)` should be extracted exactly as `H(ANS) H(EINRICH)`.
+*   `"b"`: Scan the entire entry for the pattern `b. ... YY;` and extract the two-digit year `YY`. Ignore any other text (like `nat;`) that may appear nearby. If the pattern is not found, use `null`.
+*   `"m"`: Scan the entire entry for the pattern `m. YY;` and extract the two-digit year `YY`. If the pattern is not found, use `null`.
+*   `"c"`: Scan the entire entry for the pattern `c. N;` and extract the number `N`. If the pattern is not found, use `null`.
 
 Output MUST be ONLY the JSON object. Ensure string values are trimmed.
 """
@@ -199,7 +180,7 @@ Ignore any text that is clearly a header or footer.
 Your entire response MUST be a single integer representing the total count. Do not include any other words, explanations, lists, or reasoning. Output only the number itself.
 """
 def prompt():
-    result_prompt = prompt_origin
+    result_prompt = prompt2
     #if(think):
     #    result_prompt = prompt_origin.replace("/no_think", "")
     return result_prompt

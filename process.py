@@ -69,6 +69,6 @@ def ai_response_to_list(text, file_path):
         if answer[key] is None or str(answer[key]) == "null":
             answer[key] = "\u200B"
         if key == "firstname" or key == "lastname":
-            answer[key] = str(answer[key]).replace("(", "").replace(")", "")
+            answer[key] = str(answer[key]).replace("(", "").replace(")", "").replace(",", "").replace(".", "")
         result.append(answer[key])
     return result
