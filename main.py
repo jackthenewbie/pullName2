@@ -51,11 +51,11 @@ def main(images_path):
             guessing_total_paragraph = process.total_paragraph(image_path=image_path)
             gemini_count_over_gemini_flash_max = max(guessing_total_paragraph)
             gemini_count_over_gemini_flash_min = min(guessing_total_paragraph)
+            logger.info(f"number_of_scientist record: {number_of_scientist}")
+            logger.info(f"gemini_count_over_gemini_flash: {guessing_total_paragraph}")
             if not (number_of_scientist <= gemini_count_over_gemini_flash_max and number_of_scientist >= gemini_count_over_gemini_flash_min):
                 print("Something wrong, check with the logs and sheet before continuing.")
-                logger.info("Mismatch ")
-                logger.info(f"number_of_scientist record: {number_of_scientist}")
-                logger.info(f"gemini_count_over_gemini_flash: {guessing_total_paragraph}")
+                logger.warning("Mismatch")
                 break
             os.remove(image_path)
 main("files")

@@ -2,8 +2,10 @@ import json
 from fetch import *
 import os
 import prompt
+from logger import logger
 import re
 import random
+import time
 #https://aistudio.google.com/prompts/1pJ2UKH76pv_Wk8nlMDxP-cVShuGNlxD6
 def check_name_capitalization(person):
 
@@ -84,8 +86,15 @@ def total_paragraph(image_path):
     for i in range(3):
         model = random.choice(models)
         guessing_total_paragraph = gemini_response(prompt.prompt_asking_total_biographical(), file_path=image_path, model=model, temperature=0.6, thinking=True)
-        gemini_count_over_gemini_flash = int(guessing_total_paragraph)
-        numbers_of_paragraph.append(gemini_count_over_gemini_flash)
+        gemini_count_over_gemini_flash = 0
+        try:
+            gemini_count_over_gemini_flash = int(guessing_total_paragraph)
+            numbers_of_paragraph.append(gemini_count_over_gemini_flash)
+        except:
+            logger.warning("Failed to check total paragraph, please manually check log")
+            numbers_of_paragraph.append(100)
+            numbers_of_paragraph.append(0)
+        time.sleep(3)
     #most_common_number = max(numbers_of_paragraph, key=numbers_of_paragraph.count)
     return numbers_of_paragraph
 #print(total_paragraph("files/page_0027.png"))
