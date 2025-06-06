@@ -7,8 +7,8 @@ import random
 #https://aistudio.google.com/prompts/1pJ2UKH76pv_Wk8nlMDxP-cVShuGNlxD6
 def check_name_capitalization(person):
 
-    pattern_lastname = r"^[A-Z- ]+$"
-    pattern_firstname = r"^[A-Z- ]+$"
+    pattern_lastname = r"^[A-Z- ']+$"
+    pattern_firstname = r"^[A-Z- ']+$"
     match_element_0 = re.fullmatch(pattern_lastname, person[0])
     match_element_1 = re.fullmatch(pattern_firstname, person[1])
     if match_element_0 and match_element_1:
