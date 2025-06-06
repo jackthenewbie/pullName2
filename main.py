@@ -49,12 +49,13 @@ def main(images_path):
                 number_of_scientist+=1
                 update_name(sheet, spreadsheet_id, sheet_id, person)
             guessing_total_paragraph = process.total_paragraph(image_path=image_path)
-            gemini_count_over_gemini_flash = guessing_total_paragraph
-            if(number_of_scientist not in gemini_count_over_gemini_flash):
+            gemini_count_over_gemini_flash_max = max(guessing_total_paragraph)
+            gemini_count_over_gemini_flash_min = min(guessing_total_paragraph)
+            if(number_of_scientist <= gemini_count_over_gemini_flash_max and number_of_scientist >= gemini_count_over_gemini_flash_min):
                 print("Something wrong, check with the logs and sheet before continuing.")
                 logger.info("Mismatch ")
                 logger.info(f"number_of_scientist record: {number_of_scientist}")
-                logger.info(f"gemini_count_over_gemini_flash: {gemini_count_over_gemini_flash}")
+                logger.info(f"gemini_count_over_gemini_flash: {guessing_total_paragraph}")
                 break
             os.remove(image_path)
 main("files")
