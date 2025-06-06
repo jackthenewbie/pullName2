@@ -3,7 +3,7 @@ from config import gemini_key
 from prompt import *
 from google.genai import types, Client
 def get_ai_response(text, file_path=""):
-    return gemini_response(text, file_path)
+    return gemini_response(text, file_path=file_path)
 
 def openai_response(text, file_path=""):
     client = openai.Client(
@@ -19,18 +19,22 @@ def openai_response(text, file_path=""):
         }]
     )
     return response.choices[0].message.content
-def gemini_response(text, file_path, model="gemini-2.0-flash", temperature=0, thinking=False):
-    
+def gemini_response(text, file_path=None, model="gemma-3-27b-it", temperature=0, thinking=False):
+    content=[text]
+    image=None
     client = Client(api_key=gemini_key)
-    image = client.files.upload(file=file_path)
+    if file_path != None:
+        image = client.files.upload(file=file_path)
+        content.append(image)
     if(thinking):
         thinking = types.ThinkingConfig(include_thoughts=True)
     else: thinking = None
     response = client.models.generate_content(
         model=model, 
-        contents=[image, text],
+        contents=content,
         config=types.GenerateContentConfig(temperature=temperature,
                                            thinking_config=None)
         )
-    client.files.delete(name=image.name)
+    if file_path != None:
+        client.files.delete(name=image.name)
     return response.text

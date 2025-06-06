@@ -107,6 +107,10 @@ A text is a biographical entry **IF AND ONLY IF** it strictly follows the parsin
 *   `"m"`: Scan the entire entry for the pattern `m. YY;` and extract the two-digit year `YY`. If the pattern is not found, use `null`.
 *   `"c"`: Scan the entire entry for the pattern `c. N;` and extract the number `N`. If the pattern is not found, use `null`.
 
+**Content to IGNORE (these are contexts where you'd return `{}` because the Core Identification Rule would fail):**
+*   Any text not strictly matching the parsing and capitalization format at the beginning.
+*   Headers/Footers/Page Numbers (e.g., "4738 / PAFFENBARGER", "SMITH / 123").
+
 Output MUST be ONLY the JSON object. Ensure string values are trimmed.
 """
 prompt2_5="""
@@ -170,15 +174,34 @@ Provide only the integer count. Do not include any text, punctuation, or spaces 
 """
 prompt5="""
 Count biographical entries.
-To be counted, an entry MUST start with:
-1. A lastname part before the first comma. All ALPHABETIC characters in this lastname part MUST be UPPERCASE.
-2. A firstname part (which can include middle names/initials) immediately after the first comma. All ALPHABETIC characters in this firstname part, including any letters found inside parentheses, MUST be UPPERCASE.
+To be counted, an entry MUST satisfy all of the following conditions:
+1. It must start with a lastname part before the first comma. All ALPHABETIC characters in this lastname part MUST be UPPERCASE.
+2. Immediately after the first comma, there must be a firstname part that begins with a capital letter.
+3. This firstname part must be immediately followed by another comma.
 
-Both the lastname and firstname parts must be non-empty and contain actual name characters (not just punctuation).
+This "Lastname, Firstname," structure is the key indicator of a person's entry, distinguishing it from subject headers which end in a period.
+Both the lastname and firstname parts must be non-empty.
 Ignore any text that is clearly a header or footer.
 
 Your entire response MUST be a single integer representing the total count. Do not include any other words, explanations, lists, or reasoning. Output only the number itself.
 """
+prompt_reconfirm="""
+Text=secret
+
+You will act as a strict data validator. Your goal is to determine if the first two elements of a list could form a person's name.
+
+First, apply these disqualification rules to each of the first two strings ('SUMMERS' and 'spec lectr'):
+- **Casing Rule:** If the string is entirely lowercase or has a majority of lowercase letters, it is DISQUALIFIED.
+- **Content Rule:** If the string is a common non-name word, a job title, or an abbreviation (like 'spec lectr'), it is DISQUALIFIED.
+
+
+Is Text[0] or Text[1] disqualified by any rule?
+If EITHER of the first two strings is disqualified, the final answer is False.
+
+Output only 'True' or 'False'.
+"""
+def fprompt_reconfirm(ask):
+    return prompt_reconfirm.replace("secret", ask)
 def prompt():
     result_prompt = prompt2
     #if(think):

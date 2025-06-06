@@ -3,6 +3,7 @@ from fetch import *
 import os
 import prompt
 import re
+import random
 #https://aistudio.google.com/prompts/1pJ2UKH76pv_Wk8nlMDxP-cVShuGNlxD6
 def check_name_capitalization(person):
 
@@ -72,3 +73,19 @@ def ai_response_to_list(text, file_path):
             answer[key] = str(answer[key]).replace("(", "").replace(")", "").replace(",", "").replace(".", "")
         result.append(answer[key])
     return result
+def looks_like_human(person):
+    result = gemini_response(text=fprompt_reconfirm(str(person)))
+    if("True" in result):
+        return True
+    else: return False
+def total_paragraph(image_path):
+    models = ["gemini-2.5-flash-preview-05-20", "gemini-2.5-flash-preview-04-17", "gemini-2.0-flash"]
+    numbers_of_paragraph = []
+    for i in range(3):
+        model = random.choice(models)
+        guessing_total_paragraph = gemini_response(prompt.prompt_asking_total_biographical(), file_path=image_path, model=model, temperature=0.6, thinking=True)
+        gemini_count_over_gemini_flash = int(guessing_total_paragraph)
+        numbers_of_paragraph.append(gemini_count_over_gemini_flash)
+    #most_common_number = max(numbers_of_paragraph, key=numbers_of_paragraph.count)
+    return numbers_of_paragraph
+#print(total_paragraph("files/page_0027.png"))

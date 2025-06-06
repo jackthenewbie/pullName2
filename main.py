@@ -43,12 +43,14 @@ def main(images_path):
                 time.sleep(3)
                 logger.info(person)
                 if(len(person)==0): continue
-                if(not process.check_name_capitalization(person)): continue
+                if(not process.check_name_capitalization(person)):
+                    if(not process.looks_like_human(person)): 
+                        continue
                 number_of_scientist+=1
                 update_name(sheet, spreadsheet_id, sheet_id, person)
-            guessing_total_paragraph = fetch.gemini_response(prompt.prompt_asking_total_biographical(), image_path, "gemini-2.5-flash-preview-05-20", 0, thinking=True)
-            gemini_count_over_gemini_flash = int(guessing_total_paragraph)
-            if(number_of_scientist!=gemini_count_over_gemini_flash):
+            guessing_total_paragraph = process.total_paragraph(image_path=image_path)
+            gemini_count_over_gemini_flash = guessing_total_paragraph
+            if(number_of_scientist not in gemini_count_over_gemini_flash):
                 print("Something wrong, check with the logs and sheet before continuing.")
                 logger.info("Mismatch ")
                 logger.info(f"number_of_scientist record: {number_of_scientist}")
