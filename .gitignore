@@ -13,3 +13,5 @@ horizontal_cut2.py
 horizontal
 vertical
 *.log
+temp
+.vscode
