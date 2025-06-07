@@ -85,16 +85,15 @@ def total_paragraph(image_path):
     numbers_of_paragraph = []
     for i in range(3):
         model = random.choice(models)
-        guessing_total_paragraph = gemini_response(prompt.prompt_asking_total_biographical(), file_path=image_path, model=model, temperature=0.6, thinking=True)
+        guessing_total_paragraph = gemini_response(prompt.prompt_asking_total_biographical(), file_path=image_path, model=model, temperature=0.5, thinking=True)
         gemini_count_over_gemini_flash = 0
         try:
             gemini_count_over_gemini_flash = int(guessing_total_paragraph)
             numbers_of_paragraph.append(gemini_count_over_gemini_flash)
+            logger.info(f"Count total has result in {gemini_count_over_gemini_flash} with model: {model}")
         except:
-            logger.warning("Failed to check total paragraph, please manually check log")
+            logger.warning(f"Failed to check total paragraph, please manually check log at model: {model}")
             numbers_of_paragraph.append(100)
             numbers_of_paragraph.append(0)
         time.sleep(3)
-    #most_common_number = max(numbers_of_paragraph, key=numbers_of_paragraph.count)
     return numbers_of_paragraph
-#print(total_paragraph("files/page_0027.png"))
