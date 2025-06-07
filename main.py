@@ -8,6 +8,7 @@ import prompt
 from auth import auth
 import random
 import fetch
+from db import db
 from sheetf import update_name
 def clean():
     process.remove_files("vertical/")
@@ -30,8 +31,9 @@ def main(images_path):
     images.sort()
     for f in images:
         is_image = str(f).endswith(".png")
-        if is_image:
-            image_path = os.path.join(images_path, f)
+        image_path = os.path.join(images_path, f)
+        if is_image and (not db.get(image_path) or db.get(image_path) == "False"):
+            db.set(image_path, "False")
             generate_paragraph_cut(image_path)
             number_of_scientist = 0  #recording number of biographical entry
             for paragraph_png in os.listdir("horizontal"):
@@ -58,7 +60,8 @@ def main(images_path):
                 print("Something wrong, check with the logs and sheet before continuing.")
                 logger.warning("Mismatch")
                 break
-            os.remove(image_path)
+            db.set(image_path, "True")
+        os.remove(image_path)
 main("files")
 
 #count = fetch.gemini_response(prompt.prompt_asking_total_biographical(), "files/page_017.png", "gemini-2.5-flash-preview-05-20")
