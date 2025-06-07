@@ -44,7 +44,8 @@ def main(images_path):
                 logger.info(person)
                 if(len(person)==0): continue
                 if(not process.check_name_capitalization(person)):
-                    if(not process.looks_like_human(person)): 
+                    if(not process.looks_like_human(person)):
+                        logger.warning("---------------SKIPPED----------------") 
                         continue
                 number_of_scientist+=1
                 update_name(sheet, spreadsheet_id, sheet_id, person)
