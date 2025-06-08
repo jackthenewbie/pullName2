@@ -61,9 +61,12 @@ def json_from_response_of_text(text, file_path):
             # Continue searching from before this problematic '{'
             current_pos = start_index
     return extracted_json_string
-def ai_response_to_list(text, file_path):
+def ai_response_to_list(text, file_path, custom_json = None):
     result = []
-    answer = json_from_response_of_text(text, file_path)
+    if custom_json == None:
+        answer = json_from_response_of_text(text, file_path)
+    else:
+        answer = custom_json
     if( answer == {} ):
         return result
     if( answer["firstname"] is None 
@@ -97,3 +100,19 @@ def total_paragraph(image_path):
             numbers_of_paragraph.append(0)
         time.sleep(3)
     return numbers_of_paragraph
+def total_scan(image_path):
+    data = gemini_response(prompt_scan_whole_page, image_path, "gemini-2.5-flash-preview-05-20", 0.3, thinking=False) 
+    data = str(data).replace("```", "").replace("json", "", 1)
+    data_as_dicts = json.loads(data)
+    return data_as_dicts
+def check_missing(data, person):
+    for person_in_data in data:
+        person_in_data_index=data.index(person_in_data)
+        person_in_data = ai_response_to_list(None, None, person_in_data)
+        if(person[0] == person_in_data[0] and person[1] == person_in_data[1]):
+            logger.info("Good to go.")
+            del data[person_in_data_index]
+            return
+
+    logger.warning(f"Person not exist in total scan, please manually check it.\n{person}")
+        

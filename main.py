@@ -7,6 +7,7 @@ import process
 import prompt
 from auth import auth
 import random
+import shutil
 import fetch
 from db import db
 from sheetf import update_name
@@ -36,6 +37,7 @@ def main(images_path):
             db.set(image_path, "False")
             generate_paragraph_cut(image_path)
             number_of_scientist = 0  #recording number of biographical entry
+            data = process.total_scan(image_path)
             for paragraph_png in os.listdir("horizontal"):
                 sheet = auth(random.choice(creds))
                 paragraph = os.path.join("horizontal", paragraph_png)
@@ -51,21 +53,17 @@ def main(images_path):
                         continue
                 number_of_scientist+=1
                 update_name(sheet, spreadsheet_id, sheet_id, person)
-            guessing_total_paragraph = process.total_paragraph(image_path=image_path)
-            gemini_count_over_gemini_flash_max = max(guessing_total_paragraph)
-            gemini_count_over_gemini_flash_min = min(guessing_total_paragraph)
-            logger.info(f"number_of_scientist record: {number_of_scientist}")
-            logger.info(f"gemini_count_over_gemini_flash: {guessing_total_paragraph}")
-            if not (number_of_scientist <= gemini_count_over_gemini_flash_max and number_of_scientist >= gemini_count_over_gemini_flash_min):
-                print("Something wrong, check with the logs and sheet before continuing.")
-                logger.warning("Mismatch")
-                break
+                #Check if person exist
+                process.check_missing(data, person)
             db.set(image_path, "True")
-        os.remove(image_path)
+            #Leftover perhaps miss by code
+            for person_in_data in data:
+                person_as_list = process.ai_response_to_list(None, None, person_in_data)
+                logger.warning(f"Missing person: {str(person_as_list)} at {image_path}")
+
+                with open(f"to_sheet/for_{str(f).replace("png", "")}.txt", 'a') as file:
+                    file.write(f"{str(person_as_list)}\n")
+        done = os.path.join(os.path.dirname(image_path), "done")
+        os.makedirs(done, exist_ok=True)
+        shutil.move(image_path, done)
 main("files")
-
-#count = fetch.gemini_response(prompt.prompt_asking_total_biographical(), "files/page_017.png", "gemini-2.5-flash-preview-05-20")
-#print(count)
-
-#count = fetch.gemini_response(prompt.prompt_asking_total_biographical(), "files/page_017.png", "gemini-2.5-flash-preview-05-20", 0)
-#print(count)

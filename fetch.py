@@ -38,13 +38,3 @@ def gemini_response(text, file_path=None, model="gemma-3-27b-it", temperature=0,
     if file_path != None:
         client.files.delete(name=image.name)
     return response.text
-#test = gemini_response(prompt_asking_total_biographical(), "files/page_0027.png", "gemini-1.5-flash", 0, thinking=True)
-#test = gemini_response(text=prompt(), file_path="horizontal/c1_p0002_c1_page_0024.png", temperature=0)
-#ask = ['SUMMERS', 'spec lectr', '\u200b', '\u200b', '\u200b']
-#test = gemini_response(text=fprompt_reconfirm(str(ask)))
-#print(fprompt_reconfirm(str(ask)))
-#print(test)
-#client = Client(api_key=gemini_key)
-#print('My files:')
-#for f in client.files.list():
-#    client.files.delete(name=f.name)
