@@ -76,6 +76,12 @@ def ai_response_to_list(text, file_path, custom_json = None):
             answer[key] = "\u200B"
         if key == "firstname" or key == "lastname":
             answer[key] = str(answer[key]).replace("(", "").replace(")", "").replace(",", "").replace(".", "")
+        if key == "b" or key == "m" or key == "c":
+            if(answer[key]!="\u200B"):
+                try:
+                    answer[key]=str(int(answer[key]))
+                except:
+                    logger.error("Failed to minimize number str")
         result.append(answer[key])
     return result
 def looks_like_human(person):
