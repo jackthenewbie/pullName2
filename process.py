@@ -119,15 +119,12 @@ def check_missing(data, person):
             return
         elif(person[2] == person_in_data[2] and 
              person[3] == person_in_data[3] and 
-             person[4] == person_in_data[4] and 
-             person[2] != '\u200b'          and
-             person[3] != '\u200b'          and
-             person[4] != '\u200b'
+             person[4] == person_in_data[4]
              ):
-            logger.info(f"Possibly person[1]=\"{person[1]}\" and person_in_data[1]=\"{person_in_data[1]}\" are the same person, updated anyway")
-            if(len(person[1]) < len(person_in_data[1])): person[1]=person_in_data[1]
-            del data[person_in_data_index]
-            return
+            logger.info(f"Possibly person[1]=\"{str(person)}\" and person_in_data[1]=\"{str(person_in_data)}\" are the same person, updated anyway")
+            #if(len(person[1]) < len(person_in_data[1])): person[1]=person_in_data[1]
+            #del data[person_in_data_index]
+            #return
         
 
     logger.warning(f"Person not exist in total scan, please manually check it.\n{person}")
