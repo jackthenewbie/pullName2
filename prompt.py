@@ -104,7 +104,7 @@ A text is a biographical entry **IF AND ONLY IF** it strictly follows the parsin
 *   `"lastname"`: The `POTENTIAL_LASTNAME` from Step 1.
 *   `"firstname"`: The `POTENTIAL_FIRSTNAME` from Step 1, exactly as it was identified. **Do not remove or alter the parentheses.** For example, `H(ANS) H(EINRICH)` should be extracted exactly as `H(ANS) H(EINRICH)`.
 *   `"b"`: Scan the entire entry for the pattern `b. ... YY;` and extract the two-digit year `YY`. Ignore any other text (like `nat;`) that may appear nearby. If the pattern is not found, use `null`.
-*   `"m"`: Scan the entire entry for the pattern `m. YY;` and extract the two-digit year `YY`. If the pattern is not found, use `null`.
+*   `"m"`: Scan the entire entry for the pattern `m. YY;` and extract the two-digit year `YY`. If there is more than one marry year, keep both (eg "m" : "00, 01"). If the pattern is not found, use `null`.
 *   `"c"`: Scan the entire entry for the pattern `c. N;` and extract the number `N`. If the pattern is not found, use `null`.
 
 **Content to IGNORE (these are contexts where you'd return `{}` because the Core Identification Rule would fail):**
@@ -146,8 +146,8 @@ A text is a biographical entry **IF AND ONLY IF** it strictly follows the parsin
 
 *   `"lastname"`: The `POTENTIAL_LASTNAME` from Step 1.
 *   `"firstname"`: The `POTENTIAL_FIRSTNAME` from Step 1, exactly as it was identified. **Do not remove or alter the parentheses.** For example, `H(ANS) H(EINRICH)` should be extracted exactly as `H(ANS) H(EINRICH)`.
-*   `"b"`: Scan the entire entry for the pattern `b. ... YY;` and extract the two-digit year `YY`. Ignore any other text (like `nat;`) that may appear nearby. If the pattern is not found, use `null`.
-*   `"m"`: Scan the entire entry for the pattern `m. YY;` and extract the two-digit year `YY`. If the pattern is not found, use `null`.
+*   `"b"`: Scan the entire entry for the pattern `b. (MM dd,) YY;` and extract the two-digit year `YY` (person's born year). If the pattern is not found, use `null`.
+*   `"m"`: Scan the entire entry for the pattern `m. YY;` and extract the two-digit year `YY`. If there is more than one marry year, keep both (eg "m" : "00, 01"). If the pattern is not found, use `null`.
 *   `"c"`: Scan the entire entry for the pattern `c. N;` and extract the number `N`. If the pattern is not found, use `null`.
 
 **Content to IGNORE (these are contexts where you'd return `{}` because the Core Identification Rule would fail):**
@@ -159,12 +159,11 @@ Output MUST be ONLY the JSON object. Ensure string values are trimmed.
 With the following prompt to determine an entry, please get apply it to the image, and producing me with following format
 so like
 [
-{ "firstname": "EXAMPLE", "lastname": "EXAMPLE", "b" :"20" , ... },
-{ "firstname": "EXAMPLE", "lastname": "EXAMPLE", "b" :"20" , ... },
-{ "firstname": "EXAMPLE", "lastname": "EXAMPLE", "b" :"20" , ... 
+{ "lastname": "EXAMPLE", "firstname": "EXAMPLE", "b" :"yy" , ... },
+{ "lastname": "EXAMPLE", "firstname": "EXAMPLE", "b" :"yy" , ... },
+{ "lastname": "EXAMPLE", "firstname": "EXAMPLE", "b" :"yy" , ... },
 ]
 
-like this structure right here, remove all the bracket (keep what's inside is fine). 
 Output MUST be ONLY the JSON object/array. Ensure string values are trimmed. If not a biographical entry, return {}
 """
 

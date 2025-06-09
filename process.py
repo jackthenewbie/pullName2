@@ -101,7 +101,7 @@ def total_paragraph(image_path):
         time.sleep(3)
     return numbers_of_paragraph
 def total_scan(image_path):
-    data = gemini_response(prompt_scan_whole_page, image_path, "gemini-2.5-flash-preview-05-20", 0.3, thinking=False) 
+    data = gemini_response(prompt_scan_whole_page, image_path, "gemini-2.0-flash", 0.8, thinking=False) 
     data = str(data).replace("```", "").replace("json", "", 1)
     data_as_dicts = json.loads(data)
     return data_as_dicts
@@ -110,9 +110,25 @@ def check_missing(data, person):
         person_in_data_index=data.index(person_in_data)
         person_in_data = ai_response_to_list(None, None, person_in_data)
         if(person[0] == person_in_data[0] and person[1] == person_in_data[1]):
-            logger.info("Good to go.")
+            if(person[2] == person_in_data[2] and person[3] == person_in_data[3] and person[4] == person_in_data[4]):
+                logger.info("Good to go.")
+            else:
+                logger.warning(f"Total scan has different value.")
+                logger.warning(f"person:{person} || person_in_data:{person_in_data}")
             del data[person_in_data_index]
             return
+        elif(person[2] == person_in_data[2] and 
+             person[3] == person_in_data[3] and 
+             person[4] == person_in_data[4] and 
+             person[2] != '\u200b'          and
+             person[3] != '\u200b'          and
+             person[4] != '\u200b'
+             ):
+            logger.info(f"Possibly person[1]=\"{person[1]}\" and person_in_data[1]=\"{person_in_data[1]}\" are the same person, updated anyway")
+            if(len(person[1]) < len(person_in_data[1])): person[1]=person_in_data[1]
+            del data[person_in_data_index]
+            return
+        
 
     logger.warning(f"Person not exist in total scan, please manually check it.\n{person}")
         

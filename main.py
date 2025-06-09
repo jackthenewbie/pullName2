@@ -38,6 +38,8 @@ def main(images_path):
             generate_paragraph_cut(image_path)
             number_of_scientist = 0  #recording number of biographical entry
             data = process.total_scan(image_path)
+            original_data = data
+            people_was_ignored=[]
             for paragraph_png in os.listdir("horizontal"):
                 sheet = auth(random.choice(creds))
                 paragraph = os.path.join("horizontal", paragraph_png)
@@ -49,19 +51,20 @@ def main(images_path):
                 if(len(person)==0): continue
                 if(not process.check_name_capitalization(person)):
                     if(not process.looks_like_human(person)):
-                        logger.warning("---------------SKIPPED----------------") 
+                        logger.warning("---------------SKIPPED----------------")
+                        people_was_ignored.append(person) 
                         continue
                 number_of_scientist+=1
+                process.check_missing(data, person)
                 update_name(sheet, spreadsheet_id, sheet_id, person)
                 #Check if person exist
-                process.check_missing(data, person)
             db.set(image_path, "True")
             #Leftover perhaps miss by code
             for person_in_data in data:
                 person_as_list = process.ai_response_to_list(None, None, person_in_data)
                 logger.warning(f"Missing person: {str(person_as_list)} at {image_path}")
 
-                with open(f"to_sheet/for_{str(f).replace("png", "")}.txt", 'a') as file:
+                with open(f"to_sheet/for_{str(f).replace("png", "").replace(".", "")}.txt", 'a') as file:
                     file.write(f"{str(person_as_list)}\n")
         done = os.path.join(os.path.dirname(image_path), "done")
         os.makedirs(done, exist_ok=True)

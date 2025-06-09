@@ -19,7 +19,7 @@ def openai_response(text, file_path=""):
         }]
     )
     return response.choices[0].message.content
-def gemini_response(text, file_path=None, model="gemma-3-27b-it", temperature=0, thinking=False):
+def gemini_response(text, file_path=None, model="gemini-1.5-flash", temperature=0.75, thinking=False):
     content=[text]
     image=None
     client = Client(api_key=gemini_key)
