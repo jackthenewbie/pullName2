@@ -33,8 +33,8 @@ def main(images_path):
     for f in images:
         is_image = str(f).endswith(".png")
         image_path = os.path.join(images_path, f)
-        if is_image and (not db.get(image_path) or db.get(image_path) == "False"):
-            db.set(image_path, "False")
+        if is_image and (not db.get(image_path.replace("\\", "/")) or db.get(image_path.replace("\\", "/")) == "False"):
+            db.set(image_path.replace("\\", "/"), "False")
             generate_paragraph_cut(image_path)
             number_of_scientist = 0  #recording number of biographical entry
             data = process.total_scan(image_path)
@@ -58,7 +58,7 @@ def main(images_path):
                 process.check_missing(data, person)
                 update_name(sheet, spreadsheet_id, sheet_id, person)
                 #Check if person exist
-            db.set(image_path, "True")
+            db.set(image_path.replace("\\", "/"), "True")
             #Leftover perhaps miss by code
             for person_in_data in data:
                 person_as_list = process.ai_response_to_list(None, None, person_in_data)
