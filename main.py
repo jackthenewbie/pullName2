@@ -68,7 +68,7 @@ def main(images_path):
                 os.makedirs("to_sheet", exist_ok=True)
                 with open(f"to_sheet/for_{str(f).replace("png", "").replace(".", "")}.txt", 'a') as file:
                     file.write(f"{str(person_as_list)}\n")
-        done = os.path.join(os.path.dirname(image_path), "done")
-        os.makedirs(done, exist_ok=True)
-        shutil.move(image_path, done)
+            done = os.path.join(os.path.dirname(image_path), "done")
+            os.makedirs(done, exist_ok=True)
+            shutil.move(image_path, done)
 main("files")
