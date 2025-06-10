@@ -84,6 +84,9 @@ def ai_response_to_list(text, file_path, custom_json = None):
                 except:
                     logger.error("Failed to minimize number str")
         result.append(answer[key])
+    while(len(result)<5) :
+        result.append("\u200B")
+    if len(result) > 5: result=result[:5]
     return result
 def looks_like_human(person):
     result = gemini_response(text=fprompt_reconfirm(str(person)))
@@ -124,14 +127,14 @@ def check_missing(data, person, image_moddified_person):
     for person_in_data in data:
         person_in_data_index=data.index(person_in_data)
         person_in_data = ai_response_to_list(None, None, person_in_data)
-        if(person[0] == person_in_data[0] and person[1] == person_in_data[1]):
+        if(person[0] == person_in_data[0] and (person[1] in person_in_data[1] or person_in_data[1] in person[1])):
             if(person[2] == person_in_data[2] and person[3] == person_in_data[3] and person[4] == person_in_data[4]):
                 logger.info("Good to go.")
             else:
                 logger.warning(f"Total scan has different value.")
                 logger.warning(f"person:{str(person[2:])} || person_in_data:{str(person_in_data[2:])}")
                 reconfirm_data=reconfirm_on_number(image_moddified_person)
-                person[-3:] = fixing_attempt(person[2:], person_in_data[2:], reconfirm_data)
+                person[2:] = fixing_attempt(person[2:], person_in_data[2:], reconfirm_data)
             del data[person_in_data_index]
             return
         elif(person[2] == person_in_data[2] and 

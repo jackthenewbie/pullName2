@@ -202,7 +202,8 @@ Output only 'True' or 'False'.
 """
 
 reconfirm_on_number="""
-from this image pull out born year, marry year, and child count (e.g if bird year is 39 then output is 39), 
+From this image pull out born year, marry year, and child count (e.g if bird year is 39 then output is 39);
+In married year, there can be 2 to 3 entry, keep all of them (e.g if m. 23, 54 then output is "23, 54")
 if any not found replace with '\u200b', give the answer in order in a list only. 
 Your output will be use for my code, so do not mess up your output.
 """

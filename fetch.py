@@ -2,6 +2,7 @@ import random
 import openai
 from config import gemini_key
 from prompt import *
+from logger import logger
 from google.genai import types, Client
 def get_ai_response(text, file_path=""):
     return gemini_response(text, file_path=file_path)
@@ -33,12 +34,21 @@ def gemini_response(text, file_path=None, model="random", temperature=0.75, thin
     if(thinking):
         thinking = types.ThinkingConfig(include_thoughts=True)
     else: thinking = None
-    response = client.models.generate_content(
-        model=model, 
-        contents=content,
-        config=types.GenerateContentConfig(temperature=temperature,
-                                           thinking_config=None)
-        )
+    response=None
+    while(len(models)!=0):
+        try:
+            response = client.models.generate_content(
+                model=model, 
+                contents=content,
+                config=types.GenerateContentConfig(temperature=temperature,
+                                                   thinking_config=None)
+                )
+            break
+        except Exception as e:
+            logger.error(str(e))
+            models.remove(model)
+            model=random.choice(models)
+    if(response is None): raise Exception("Something has gone wrong, check logs")
     if file_path != None:
         client.files.delete(name=image.name)
     return response.text
