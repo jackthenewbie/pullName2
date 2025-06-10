@@ -1,3 +1,4 @@
+from genericpath import exists
 import os
 import time
 from config import creds, spreadsheet_id, sheet_id
@@ -47,7 +48,7 @@ def main(images_path):
                 logger.info(paragraph_png)
                 person = process.ai_response_to_list(prompt.prompt(), paragraph)
                 time.sleep(3)
-                logger.info(person)
+                logger.info(f"Start: {str(person)}")
                 if(len(person)==0): continue
                 if(not process.check_name_capitalization(person)):
                     if(not process.looks_like_human(person)):
@@ -55,7 +56,8 @@ def main(images_path):
                         people_was_ignored.append(person) 
                         continue
                 number_of_scientist+=1
-                process.check_missing(data, person)
+                process.check_missing(data, person, paragraph)
+                logger.info(f"Final: {str(person)}")
                 update_name(sheet, spreadsheet_id, sheet_id, person)
                 #Check if person exist
             db.set(image_path.replace("\\", "/"), "True")
@@ -63,7 +65,7 @@ def main(images_path):
             for person_in_data in data:
                 person_as_list = process.ai_response_to_list(None, None, person_in_data)
                 logger.warning(f"Missing person: {str(person_as_list)} at {image_path}")
-
+                os.makedirs("to_sheet", exist_ok=True)
                 with open(f"to_sheet/for_{str(f).replace("png", "").replace(".", "")}.txt", 'a') as file:
                     file.write(f"{str(person_as_list)}\n")
         done = os.path.join(os.path.dirname(image_path), "done")

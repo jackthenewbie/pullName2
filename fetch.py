@@ -1,3 +1,4 @@
+import random
 import openai
 from config import gemini_key
 from prompt import *
@@ -19,7 +20,10 @@ def openai_response(text, file_path=""):
         }]
     )
     return response.choices[0].message.content
-def gemini_response(text, file_path=None, model="gemini-1.5-flash", temperature=0.75, thinking=False):
+def gemini_response(text, file_path=None, model="random", temperature=0.75, thinking=False):
+    models=["gemini-2.0-flash-lite", "gemini-1.5-flash"]
+    if(model=="random"):
+        model = random.choice(models)
     content=[text]
     image=None
     client = Client(api_key=gemini_key)

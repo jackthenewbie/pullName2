@@ -200,6 +200,13 @@ If EITHER of the first two strings is disqualified, the final answer is False.
 
 Output only 'True' or 'False'.
 """
+
+reconfirm_on_number="""
+from this image pull out born year, marry year, and child count (e.g if bird year is 39 then output is 39), 
+if any not found replace with '\u200b', give the answer in order in a list only. 
+Your output will be use for my code, so do not mess up your output.
+"""
+def reconfirm_on_numberf(): return reconfirm_on_number
 def fprompt_reconfirm(ask):
     return prompt_reconfirm.replace("secret", ask)
 def prompt():

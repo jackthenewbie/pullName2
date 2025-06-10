@@ -6,6 +6,7 @@ from logger import logger
 import re
 import random
 import time
+import ast
 #https://aistudio.google.com/prompts/1pJ2UKH76pv_Wk8nlMDxP-cVShuGNlxD6
 def check_name_capitalization(person):
 
@@ -111,7 +112,15 @@ def total_scan(image_path):
     data = str(data).replace("```", "").replace("json", "", 1)
     data_as_dicts = json.loads(data)
     return data_as_dicts
-def check_missing(data, person):
+def reconfirm_on_number(image_path):
+    data = gemini_response(prompt.reconfirm_on_numberf(), image_path, "gemma-3-27b-it", 1, thinking=False)
+    data = [str(x) for x in ast.literal_eval(str(data).strip())]
+    return data
+def fixing_attempt(*lists):
+    logger.info(f"Attempting to fix...")
+    data=[max(set(column), key=column.count) for column in zip(*lists)]
+    return data
+def check_missing(data, person, image_moddified_person):
     for person_in_data in data:
         person_in_data_index=data.index(person_in_data)
         person_in_data = ai_response_to_list(None, None, person_in_data)
@@ -120,7 +129,9 @@ def check_missing(data, person):
                 logger.info("Good to go.")
             else:
                 logger.warning(f"Total scan has different value.")
-                logger.warning(f"person:{person} || person_in_data:{person_in_data}")
+                logger.warning(f"person:{str(person[2:])} || person_in_data:{str(person_in_data[2:])}")
+                reconfirm_data=reconfirm_on_number(image_moddified_person)
+                person[-3:] = fixing_attempt(person[2:], person_in_data[2:], reconfirm_data)
             del data[person_in_data_index]
             return
         elif(person[2] == person_in_data[2] and 
