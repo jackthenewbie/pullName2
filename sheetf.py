@@ -32,14 +32,24 @@ def update_name(sheet, spreadsheet_id, sheet_id, person: List):
     else:
         logger.info("Totally new person, adding...")
         logger.info(f"person: {str(person)}")
+
+    if is_broken(lastnames, firstnames): return False
+
+    append_body = {'values': [[]] * 1}
+    sheet.values().append(
+        spreadsheetId=spreadsheet_id,
+        range=f"{sheet_id}!A1",
+        valueInputOption="USER_ENTERED",
+        insertDataOption="INSERT_ROWS",
+        body=append_body
+    ).execute()
+
     data = [
         {"range": f"{sheet_id}!C{len(lastnames)+1}", "values": [person[:2]]},
         {"range": f"{sheet_id}!H{len(lastnames)+1}", "values": [[person[2]]]},
         {"range": f"{sheet_id}!K{len(lastnames)+1}", "values": [person[3:]]},
-
     ]
     body = {"valueInputOption": "USER_ENTERED", "data":data}
-    if is_broken(lastnames, firstnames): return False
     result = sheet.values().batchUpdate(
         spreadsheetId=spreadsheet_id,
         body=body,
