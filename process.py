@@ -117,7 +117,7 @@ def total_scan(image_path):
     return data_as_dicts
 def reconfirm_on_number(image_path):
     data = gemini_response(prompt.reconfirm_on_numberf(), image_path, "gemma-3-27b-it", 1, thinking=False)
-    data = data.replace("```","").replace("\n","").replace(" ","")
+    data = data.replace("```","").replace("\n","").replace(" ","").replace("python","").replace("json","")
     data = [str(x) for x in ast.literal_eval(str(data))]
     return data
 def fixing_attempt(*lists):
