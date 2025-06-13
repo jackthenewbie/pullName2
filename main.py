@@ -66,7 +66,7 @@ def main(images_path):
                 person_as_list = process.ai_response_to_list(None, None, person_in_data)
                 logger.warning(f"Missing person: {str(person_as_list)} at {image_path}")
                 os.makedirs("to_sheet", exist_ok=True)
-                with open(f"to_sheet/for_{str(f).replace("png", "").replace(".", "")}.txt", 'a') as file:
+                with open(f"to_sheet/for_{str(f).replace("png", "").replace(".", "")}.txt", 'a', encoding='utf-8') as file:
                     file.write(f"{str(person_as_list)}\n")
             done = os.path.join(os.path.dirname(image_path), "done")
             os.makedirs(done, exist_ok=True)
