@@ -115,6 +115,15 @@ def total_scan(image_path):
     data = str(data).replace("```", "").replace("json", "", 1)
     data_as_dicts = json.loads(data)
     return data_as_dicts
+def fetch_total(image_path):
+    data = []
+    for i in range(3):
+        if(len(data)==0):
+            data = total_scan(image_path)
+        else: break
+        time.sleep(30)
+    if(len(data)==0): raise Exception("Something seriously wrong is happening, abort")
+    return data
 def reconfirm_on_number(image_path):
     data = gemini_response(prompt.reconfirm_on_numberf(), image_path, "gemma-3-27b-it", 1, thinking=False)
     data = data.replace("```","").replace("\n","").replace(" ","").replace("python","").replace("json","")

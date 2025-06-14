@@ -38,7 +38,7 @@ def main(images_path):
             db.set(image_path.replace("\\", "/"), "False")
             generate_paragraph_cut(image_path)
             number_of_scientist = 0  #recording number of biographical entry
-            data = process.total_scan(image_path)
+            data = process.fetch_total(image_path=image_path)
             original_data = data
             people_was_ignored=[]
             for paragraph_png in os.listdir("horizontal"):
