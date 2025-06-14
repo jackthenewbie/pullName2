@@ -34,7 +34,8 @@ def main(images_path):
     for f in images:
         is_image = str(f).endswith(".png")
         image_path = os.path.join(images_path, f)
-        if is_image and (not db.get(image_path.replace("\\", "/")) or db.get(image_path.replace("\\", "/")) == "False"):
+        image_state = db.get(image_path.replace("\\", "/"))
+        if is_image and (not image_state or image_state == "False"):
             db.set(image_path.replace("\\", "/"), "False")
             generate_paragraph_cut(image_path)
             number_of_scientist = 0  #recording number of biographical entry
@@ -69,6 +70,9 @@ def main(images_path):
                 with open(f"to_sheet/for_{str(f).replace("png", "").replace(".", "")}.txt", 'a', encoding='utf-8') as file:
                     file.write(f"{str(person_as_list)}\n")
             done = os.path.join(os.path.dirname(image_path), "done")
+            os.makedirs(done, exist_ok=True)
+            shutil.move(image_path, done)
+        elif is_image and image_state == "True":
             os.makedirs(done, exist_ok=True)
             shutil.move(image_path, done)
 main("files")
