@@ -1,4 +1,5 @@
 import random
+import time
 import openai
 from config import gemini_key
 from prompt import *
@@ -21,6 +22,16 @@ def openai_response(text, file_path=""):
         }]
     )
     return response.choices[0].message.content
+def tryupload(client: Client, file_path: str):
+    image=None
+    index=0
+    while(image==None and index<3):
+        try:
+            image = client.files.upload(file=file_path)
+        except:
+            index+=1
+            time.sleep(5*index)
+    return image
 def gemini_response(text, file_path=None, model="random", temperature=0.75, thinking=False):
     models=["gemini-2.0-flash-lite", "gemini-1.5-flash"]
     if(model=="random"):
@@ -29,7 +40,7 @@ def gemini_response(text, file_path=None, model="random", temperature=0.75, thin
     image=None
     client = Client(api_key=gemini_key)
     if file_path != None:
-        image = client.files.upload(file=file_path)
+        image = tryupload(client, file_path)
         content.append(image)
     if(thinking):
         thinking = types.ThinkingConfig(include_thoughts=True)
