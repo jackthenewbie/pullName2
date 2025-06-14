@@ -34,8 +34,6 @@ def tryupload(client: Client, file_path: str):
     return image
 def gemini_response(text, file_path=None, model="random", temperature=0.75, thinking=False):
     models=["gemini-2.0-flash-lite", "gemini-1.5-flash"]
-    if(model=="random"):
-        model = random.choice(models)
     content=[text]
     image=None
     client = Client(api_key=gemini_key)
@@ -47,6 +45,9 @@ def gemini_response(text, file_path=None, model="random", temperature=0.75, thin
     else: thinking = None
     response=None
     while(len(models)!=0):
+        if(model=="random"): model=random.choice(models)
+        else: 
+            models.append(model)
         try:
             response = client.models.generate_content(
                 model=model, 
@@ -58,7 +59,7 @@ def gemini_response(text, file_path=None, model="random", temperature=0.75, thin
         except Exception as e:
             logger.error(str(e))
             models.remove(model)
-            model=random.choice(models)
+            model="random"
     if(response is None): raise Exception("Something has gone wrong, check logs")
     if file_path != None:
         client.files.delete(name=image.name)
