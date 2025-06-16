@@ -35,6 +35,7 @@ def main(images_path):
         is_image = str(f).endswith(".png")
         image_path = os.path.join(images_path, f)
         image_state = db.get(image_path.replace("\\", "/"))
+        done = os.path.join(os.path.dirname(image_path), "done")
         if is_image and (not image_state or image_state == "False"):
             db.set(image_path.replace("\\", "/"), "False")
             generate_paragraph_cut(image_path)
@@ -69,7 +70,6 @@ def main(images_path):
                 os.makedirs("to_sheet", exist_ok=True)
                 with open(f"to_sheet/for_{str(f).replace("png", "").replace(".", "")}.txt", 'a', encoding='utf-8') as file:
                     file.write(f"{str(person_as_list)}\n")
-            done = os.path.join(os.path.dirname(image_path), "done")
             os.makedirs(done, exist_ok=True)
             shutil.move(image_path, done)
         elif is_image and image_state == "True":
