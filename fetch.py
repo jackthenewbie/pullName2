@@ -31,6 +31,7 @@ def tryupload(client: Client, file_path: str):
         except:
             index+=1
             time.sleep(5*index)
+    if(image==None): logger.error("Failed to uploaded image")
     return image
 def gemini_response(text, file_path=None, model="random", temperature=0.75, thinking=False):
     models=["gemini-2.0-flash-lite", "gemini-1.5-flash"]
@@ -61,6 +62,6 @@ def gemini_response(text, file_path=None, model="random", temperature=0.75, thin
             models.remove(model)
             model="random"
     if(response is None): raise Exception("Something has gone wrong, check logs")
-    if file_path != None:
+    if file_path != None and image != None:
         client.files.delete(name=image.name)
     return response.text

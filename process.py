@@ -1,4 +1,5 @@
 import json
+from typing import List
 from fetch import *
 import os
 import prompt
@@ -19,6 +20,11 @@ def check_name_capitalization(person):
     else:
         return False
 
+def sanatize_response(response):
+    match = re.search(r'\[.*', text)
+    if match: result = match.group(0)
+    else: result = text
+    return result
     
 def remove_files(dir_path):
     """Removes all files directly within dir_path using os.scandir."""
@@ -73,7 +79,7 @@ def ai_response_to_list(text, file_path, custom_json = None):
     if( answer["firstname"] is None 
         or answer["lastname"] is None): return result
     for key in answer:
-        if answer[key] is None or str(answer[key]) == "null":
+        if answer[key] is None or str(answer[key]) == "null" or str(answer[key]).strip() == "":
             answer[key] = "\u200B"
         if key == "firstname" or key == "lastname":
             answer[key] = str(answer[key]).replace("(", "").replace(")", "").replace(",", "").replace(".", "")
@@ -124,11 +130,16 @@ def fetch_total(image_path):
         time.sleep(30)
     if(len(data)==0): raise Exception("Something seriously wrong is happening, abort")
     return data
-def reconfirm_on_number(image_path):
-    data = gemini_response(prompt.reconfirm_on_numberf(), image_path, "gemma-3-27b-it", 1, thinking=False)
-    data = data.replace("```","").replace("\n","").replace(" ","").replace("python","").replace("json","")
-    data = [str(x) for x in ast.literal_eval(str(data))]
-    return data
+def reconfirm_on_number(image_path) -> List[List[str]]:
+    datas=[]
+    for _ in range(3):
+        data = gemini_response(prompt.reconfirm_on_numberf(), image_path, "gemma-3-27b-it", 1, thinking=False)
+        data = sanatize_response(data)
+        data = data.replace("```","").replace("\n","").replace(" ","").replace("python","").replace("json","")
+        data = [str(x) for x in ast.literal_eval(str(data))]
+        time.sleep(3)
+        datas.append(data)
+    return datas
 def fixing_attempt(*lists):
     logger.info(f"Attempting to fix...")
     data=[max(set(column), key=column.count) for column in zip(*lists)]
@@ -145,7 +156,7 @@ def check_missing(data, person, image_moddified_person):
                 logger.warning(f"Total scan has different value.")
                 logger.warning(f"person:{str(person[2:])} || person_in_data:{str(person_in_data[2:])}")
                 reconfirm_data=reconfirm_on_number(image_moddified_person)
-                person[2:] = fixing_attempt(person[2:], person_in_data[2:], reconfirm_data)
+                person[2:] = fixing_attempt(person[2:], person_in_data[2:], *reconfirm_data)
             del data[person_in_data_index]
             return
         elif(person[2] == person_in_data[2] and 
