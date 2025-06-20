@@ -20,7 +20,7 @@ def check_name_capitalization(person):
     else:
         return False
 
-def sanatize_response(response):
+def sanatize_response(text):
     match = re.search(r'\[.*', text)
     if match: result = match.group(0)
     else: result = text
