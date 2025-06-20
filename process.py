@@ -100,7 +100,7 @@ def looks_like_human(person):
         return True
     else: return False
 def total_paragraph(image_path):
-    models = ["gemini-2.5-flash-preview-05-20", "gemini-2.5-flash-preview-04-17", "gemini-2.0-flash"]
+    models = ["gemini-2.5-flash", "gemini-2.5-flash-preview-04-17", "gemini-2.0-flash"]
     numbers_of_paragraph = []
     for i in range(3):
         model = random.choice(models)
@@ -117,6 +117,8 @@ def total_paragraph(image_path):
         time.sleep(3)
     return numbers_of_paragraph
 def total_scan(image_path):
+    models = ["gemini-2.5-flash", "gemini-2.5-flash-preview-04-17", "gemini-2.0-flash"]
+    model = random.choice(models)
     data = gemini_response(prompt_scan_whole_page, image_path, "gemini-2.0-flash", 0.8, thinking=False) 
     data = str(data).replace("```", "").replace("json", "", 1)
     data_as_dicts = json.loads(data)
@@ -136,9 +138,14 @@ def reconfirm_on_number(image_path) -> List[List[str]]:
         data = gemini_response(prompt.reconfirm_on_numberf(), image_path, "gemma-3-27b-it", 1, thinking=False)
         data = sanatize_response(data)
         data = data.replace("```","").replace("\n","").replace(" ","").replace("python","").replace("json","")
-        data = [str(x) for x in ast.literal_eval(str(data))]
-        time.sleep(3)
-        datas.append(data)
+        sleep_time=3
+        try:
+            data = [str(x) for x in ast.literal_eval(str(data))]
+            datas.append(data)
+        except Exception as e:
+            logger.error(f"Failed to parse data: \n{data} \nwith error: {str(e)}")
+            sleep_time*=(_+1)
+        time.sleep(_*3)
     return datas
 def fixing_attempt(*lists):
     logger.info(f"Attempting to fix...")
