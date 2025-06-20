@@ -145,7 +145,7 @@ def reconfirm_on_number(image_path) -> List[List[str]]:
         except Exception as e:
             logger.error(f"Failed to parse data: \n{data} \nwith error: {str(e)}")
             sleep_time*=(_+1)
-        time.sleep(_*3)
+        time.sleep(sleep_time)
     return datas
 def fixing_attempt(*lists):
     logger.info(f"Attempting to fix...")
